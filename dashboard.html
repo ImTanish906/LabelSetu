@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard — LabelSetu</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="blob-field">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+<div class="noise-overlay"></div>
+
+<nav class="navbar">
+  <div class="brand">LabelSetu<sup>®</sup></div>
+  <div class="nav-links">
+    <a href="upload.html">Check label</a>
+    <a href="dashboard.html">Dashboard</a>
+    <button class="theme-toggle" id="themeToggleBtn">🌙 Dark</button>
+    <button class="theme-toggle" id="logoutBtn">Log out</button>
+  </div>
+</nav>
+
+<div class="page top-aligned">
+  <div class="container wide">
+    <p class="eyebrow">Overview</p>
+    <h1 style="text-align:left;">Dashboard</h1>
+    <p class="subtitle" style="text-align:left;">All label scans, at a glance.</p>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="scan-list">
+      <div class="list-title">Recent scans</div>
+      <div id="scanListBody"></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  requireAuth();
+
+  const scans = getAllScans();
+  const total = scans.length;
+  const nonCompliant = scans.filter(s => s.missingCount > 0).length;
+  const compliant = total - nonCompliant;
+
+  document.getElementById("statGrid").innerHTML = `
+    <div class="stat-card">
+      <div class="label">Total scans</div>
+      <div class="value">${total}</div>
+    </div>
+    <div class="stat-card danger-accent">
+      <div class="label">Non-compliant</div>
+      <div class="value danger">${nonCompliant}</div>
+    </div>
+    <div class="stat-card success-accent">
+      <div class="label">Compliant</div>
+      <div class="value success">${compliant}</div>
+    </div>
+  `;
+
+  const listBody = document.getElementById("scanListBody");
+
+  if (total === 0) {
+    listBody.innerHTML = '<div class="empty-state">No scans yet. <a href="upload.html">Check your first label</a>.</div>';
+  } else {
+    listBody.innerHTML = scans.map(s => {
+      const badgeClass = s.missingCount > 0 ? "fail" : "pass";
+      const badgeText = s.missingCount > 0 ? s.missingCount + " missing" : "Compliant";
+      return `
+        <div class="scan-row">
+          <div class="row-left">
+            <div class="row-icon"></div>
+            <div>
+              <div class="row-title">${s.category}</div>
+              <div class="row-time">${new Date(s.timestamp).toLocaleString()}</div>
+            </div>
+          </div>
+          <a href="results.html?id=${s.id}">
+            <span class="status-badge ${badgeClass}">${badgeText}</span>
+          </a>
+        </div>
+      `;
+    }).join("");
+  }
+</script>
+</body>
+</html>

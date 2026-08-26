@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Check a label — LabelSetu</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="blob-field">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+<div class="noise-overlay"></div>
+
+<nav class="navbar">
+  <div class="brand">LabelSetu<sup>®</sup></div>
+  <div class="nav-links">
+    <a href="upload.html">Check label</a>
+    <a href="dashboard.html">Dashboard</a>
+    <button class="theme-toggle" id="themeToggleBtn">🌙 Dark</button>
+    <button class="theme-toggle" id="logoutBtn">Log out</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="float-card c1"><span class="fc-line l1"></span><span class="fc-line l2"></span></div>
+  <div class="float-card c2"><span class="fc-line l1"></span><span class="fc-line l2"></span></div>
+  <div class="float-card c3"><span class="fc-line l1"></span><span class="fc-line l2"></span></div>
+  <div class="float-card c4"><span class="fc-line l1"></span><span class="fc-line l2"></span></div>
+
+  <div class="container">
+    <p class="eyebrow">New scan</p>
+    <div class="card">
+      <h1>Check a product label</h1>
+      <p class="subtitle">Upload a clear photo of the package label.</p>
+
+      <div id="dropzone" class="dropzone">
+        <div class="icon">↑</div>
+        <div>Drag a photo here or click to upload</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*">
+
+      <img id="previewImg" class="preview-thumb" style="display:none;">
+
+      <label for="category">Product category</label>
+      <select id="category">
+        <option value="food">Packaged food</option>
+        <option value="cosmetics">Cosmetics</option>
+        <option value="general">General FMCG</option>
+      </select>
+
+      <p class="error-text" id="errorText" style="display:none;"></p>
+
+      <button class="primary" id="checkBtn">Check compliance</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  requireAuth();
+
+  let uploadedImage = null;
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("fileInput");
+  const previewImg = document.getElementById("previewImg");
+  const errorEl = document.getElementById("errorText");
+  const checkBtn = document.getElementById("checkBtn");
+
+  dropzone.addEventListener("click", () => fileInput.click());
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener("change", () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file.type.startsWith("image/")) {
+      errorEl.textContent = "Please upload an image file.";
+      errorEl.style.display = "block";
+      return;
+    }
+    errorEl.style.display = "none";
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      uploadedImage = e.target.result;
+      previewImg.src = uploadedImage;
+      previewImg.style.display = "block";
+      dropzone.style.display = "none";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  checkBtn.addEventListener("click", () => {
+    if (!uploadedImage) {
+      errorEl.textContent = "Please upload a photo first.";
+      errorEl.style.display = "block";
+      return;
+    }
+    errorEl.style.display = "none";
+    checkBtn.disabled = true;
+    checkBtn.textContent = "Checking…";
+
+    const category = document.getElementById("category").value;
+
+    setTimeout(() => {
+      const scan = mockRunCheck(category, uploadedImage);
+      window.location.href = "results.html?id=" + scan.id;
+    }, 1200);
+  });
+</script>
+</body>
+</html>

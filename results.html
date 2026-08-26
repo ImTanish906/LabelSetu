@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Result — LabelSetu</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="blob-field">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+</div>
+<div class="noise-overlay"></div>
+
+<nav class="navbar">
+  <div class="brand">LabelSetu<sup>®</sup></div>
+  <div class="nav-links">
+    <a href="upload.html">Check label</a>
+    <a href="dashboard.html">Dashboard</a>
+    <button class="theme-toggle" id="themeToggleBtn">🌙 Dark</button>
+    <button class="theme-toggle" id="logoutBtn">Log out</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="container">
+    <p class="eyebrow">Scan result</p>
+    <div class="card" id="resultCard">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  requireAuth();
+
+  const params = new URLSearchParams(window.location.search);
+  const scanId = params.get("id");
+  const scan = getScanById(scanId);
+  const card = document.getElementById("resultCard");
+
+  if (!scan) {
+    card.innerHTML = '<div class="empty-state">No scan found. <a href="upload.html">Try a new upload</a>.</div>';
+  } else {
+    const badgeClass = scan.missingCount > 0 ? "fail" : "pass";
+    const badgeText = scan.missingCount > 0 ? scan.missingCount + " field" + (scan.missingCount > 1 ? "s" : "") + " missing" : "All fields present";
+
+    const rowsHtml = scan.results.map(r => `
+      <div class="field-row">
+        <span>${r.field}</span>
+        <span class="value ${r.present ? 'pass' : 'fail'}">
+          ${r.present ? '✓ ' + r.value : '✕ Missing'}
+        </span>
+      </div>
+    `).join("");
+
+    card.innerHTML = `
+      <div class="result-header">
+        <h2>Scan result</h2>
+        <span class="status-badge ${badgeClass}">${badgeText}</span>
+      </div>
+
+      <div class="result-meta">
+        <div class="thumb"><img src="${scan.image}" style="width:100%;height:100%;object-fit:cover;border-radius:14px;"></div>
+        <div class="meta-text">
+          Category: <strong>${scan.category}</strong><br>
+          Checked: ${new Date(scan.timestamp).toLocaleString()}
+        </div>
+      </div>
+
+      <div>${rowsHtml}</div>
+
+      <button class="primary" style="margin-top:22px;" onclick="window.print()">Download report</button>
+      <button class="secondary" onclick="window.location.href='upload.html'">Check another label</button>
+    `;
+  }
+</script>
+</body>
+</html>
